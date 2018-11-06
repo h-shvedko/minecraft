@@ -1,0 +1,8 @@
+name: Hallo_Welt-Plugin
+main: HalloWeltPlugin
+version: 1.0
+api-version: 1.13
+commands:
+      build:
+          description: Build new wall with given bloks
+          usage: /build
