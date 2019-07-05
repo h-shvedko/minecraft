@@ -2,15 +2,43 @@
  * Created by shvedko on 25.10.2018.
  */
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Builds extends JavaPlugin {
+
+    private static String typeOfBuildsScan = "scan";
+    private String typeOfBuildsCreate = "scan";
+
+    private int x = 0;
+    private int y = 0;
+    private int z = 0;
+    private int deep = 0;
+    private int width = 0;
+    private int hieght = 0;
+
+    private List<Block> buildData = new ArrayList<Block>();
+    private String blockName;
+
     public void onEnable() {
     }
 
@@ -18,41 +46,120 @@ public class Builds extends JavaPlugin {
 
     }
 
-    public boolean onCommand(CommandSender sender, Command command, String commandName, String[] args){
+    /**
+     * @param sender
+     * @param command
+     * @param commandName
+     * @param args
+     * @return
+     */
+    public boolean onCommand(CommandSender sender, Command command, String commandName, String[] args) {
         Player player = (Player) sender;
 
-        Location position = player.getLocation();
         World world = player.getWorld();
 
-        position.setX(position.getX() + 3);
-        double yStart = position.getY();
-        double zStart = position.getZ();
+        readCoordinates(args);
 
-        for (int i = 0; i < Integer.parseInt(args[1]); i++){
-            position.setY(yStart + i);
-            for (int j = 0; j < Integer.parseInt(args[2]); j++){
-                position.setZ(zStart + j);
-                world.getBlockAt(position).setType(this.getBlockType(args[0]));
-            }
+        if (args[0].equals(typeOfBuildsScan)) {
+            scanBlocks(world);
+            saveToJson();
+        } else {
+            loadBlockData();
+            createBlocks(world, player);
         }
 
         return true;
     }
 
-    private Material getBlockType(String arg) {
-        switch (arg){
-            case "ground":
-                return Material.DIRT;
-            case "granit":
-                return Material.GRANITE;
-            case "glass":
-                return Material.GLASS;
-            case "diamond":
-                return Material.DIAMOND;
-            case "wood":
-                return Material.OAK_WOOD;
-            default:
-                return Material.BEEF;
+    /**
+     *
+     */
+    private void saveToJson() {
+        Gson gsonBuilder = new GsonBuilder().create();
+
+        String jsonFromJavaArrayList = gsonBuilder.toJson(buildData);
+
+        try (FileWriter file = new FileWriter(blockName + ".json")) {
+            file.write(jsonFromJavaArrayList);
+            System.out.println("Successfully Copied JSON Object to File...");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadBlockData(){
+        Gson gson = new Gson();
+        JsonParser jsonParser = new JsonParser();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(blockName + ".json"));
+            JsonElement jsonElement = jsonParser.parse(br);
+
+            //Create generic type
+            Type type = new TypeToken<List<Block>>() {}.getType();
+
+            buildData = gson.fromJson(jsonElement, type);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     *
+     * @param args
+     */
+    private void readCoordinates(String[] args) {
+        blockName = args[1];
+        x = Integer.valueOf(args[2]);
+        y = Integer.valueOf(args[3]);
+        z = Integer.valueOf(args[4]);
+        deep = Integer.valueOf(args[5]);
+        width = Integer.valueOf(args[6]);
+        hieght = Integer.valueOf(args[7]);
+    }
+
+    /**
+     * @param world
+     * @param player
+     */
+    private void createBlocks(World world, Player player) {
+        if (x != 0 && y != 0 && z != 0) {
+            Location position = player.getLocation();
+
+            position.setX(position.getX() + 5);
+
+            for (Block block : buildData) {
+                double x0 = block.getLocation().getX();
+                double y0 = block.getLocation().getY();
+                double z0 = block.getLocation().getZ();
+
+                block.getLocation().setX(x + x0);
+                block.getLocation().setY(y + y0);
+                block.getLocation().setZ(z + z0);
+
+                world.getBlockAt(position).setType(block.getType());
+            }
+
+        }
+    }
+
+    /**
+     * @param world
+     */
+    private void scanBlocks(World world) {
+
+        if (x != 0 && y != 0 && z != 0) {
+            for (int k = y; k <= hieght; k++) {
+                for (int j = z; j <= width; j++) {
+                    for (int i = x; i <= deep; i++) {
+                        Block block = world.getBlockAt(i, j, k);
+                        block.getLocation().setX(i);
+                        block.getLocation().setY(k);
+                        block.getLocation().setZ(j);
+                        buildData.add(block);
+                    }
+                }
+            }
         }
     }
 }
