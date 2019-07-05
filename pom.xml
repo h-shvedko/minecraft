@@ -24,9 +24,9 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.13.2</version>
+            <version>1.14.3</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/craftbukkit-1.13.2.jar</systemPath>
+            <systemPath>${project.basedir}/src/main/resources/craftbukkit-1.14.3.jar</systemPath>
         </dependency>
     </dependencies>
 </project>
