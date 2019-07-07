@@ -27,7 +27,7 @@ import java.util.List;
 public class Builds extends JavaPlugin {
 
     private static String typeOfBuildsScan = "scan";
-    private String typeOfBuildsCreate = "scan";
+    private String typeOfBuildsCreate = "create";
 
     private int x = 0;
     private int y = 0;
@@ -61,9 +61,12 @@ public class Builds extends JavaPlugin {
         readCoordinates(args);
 
         if (args[0].equals(typeOfBuildsScan)) {
+            System.out.println("Start scanning!");
             scanBlocks(world);
             saveToJson();
         } else {
+            System.out.println("Start creating!");
+
             loadBlockData();
             createBlocks(world, player);
         }
@@ -148,18 +151,33 @@ public class Builds extends JavaPlugin {
      */
     private void scanBlocks(World world) {
 
-        if (x != 0 && y != 0 && z != 0) {
-            for (int k = y; k <= hieght; k++) {
-                for (int j = z; j <= width; j++) {
-                    for (int i = x; i <= deep; i++) {
-                        Block block = world.getBlockAt(i, j, k);
-                        block.getLocation().setX(i);
-                        block.getLocation().setY(k);
-                        block.getLocation().setZ(j);
-                        buildData.add(block);
+//        if (x != 0 && y != 0 && z != 0) {
+        int deepNew, widthNew;
+        if(deep < 0){
+            deepNew = deep * (-1);
+        }
+
+        if(width < 0){
+            widthNew = width * (-1);
+        }
+
+        for (int k = y; k <= y + hieght; k++) {
+            for (int j = z; j <= z + width; j++) {
+                for (int i = x; i <= x + deep; i++) {
+                    Block block = world.getBlockAt(i, j, k);
+                    if(deep < 0){
+                        block.getLocation().setX(i * (-1));
                     }
+
+                    if(width < 0){
+                        block.getLocation().setY(k * (-1));
+                    }
+
+                    block.getLocation().setZ(j);
+                    buildData.add(block);
                 }
             }
         }
-    }
+        }
+//    }
 }
